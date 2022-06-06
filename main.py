@@ -3,7 +3,8 @@ from tkinter import filedialog, messagebox
 from PIL import ImageTk, Image
 import os
 import sqlite3
-import myshelf_main
+from myshelf_main import OpenShelf
+from sqlite_requests import create_command
 
 
 root = Tk()
@@ -17,6 +18,7 @@ bg_img = Image.open('images/pexels-emre-can-acer-2079451.jpg')
 [img_width, img_height] = bg_img.size
 bg_img = bg_img.resize((int(img_width * 0.20), int(img_height * 0.20)))
 bg_img = ImageTk.PhotoImage(bg_img)
+# place image in the background
 canvas = Canvas(root)
 canvas.create_image(-50, -200, image=bg_img, anchor=NW)
 canvas.place(x=0, y=0, relwidth=1, relheight=1)
@@ -30,7 +32,10 @@ def open_db():
                                     filetypes=(("database files", "*.db"),)
                                     )
 
-    myshelf_main.open_my_shelf(root.filename)
+    # open new window showing database
+    my_shelf = OpenShelf(root.filename)
+    my_shelf.set_window()
+    my_shelf.open_my_shelf()
 
 
 # create new database
@@ -42,61 +47,30 @@ def create_db():
         dir_status = os.path.exists(db_path)
         if dir_status is False:
             os.makedirs(db_path)
-
         # check if new database name already exists before creating it
-        new_db = f'db/{create_db_entry.get()}.db'
+        db_name = create_db_entry.get()
+        new_db = f'db/{db_name}.db'
         if not os.path.exists(new_db):
             # checking if the new database is created and opens properly
             try:
                 # Create a database
-                conn = sqlite3.connect(f'db/{create_db_entry.get()}.db')
+                conn = sqlite3.connect(f'db/{db_name}.db')
             except sqlite3.OperationalError:
                 messagebox.showerror("Error", "Error while creating database, please avoid special characters")
             else:
-                # Create cursor
-                c = conn.cursor()
-
-                # Create table album
-                c.execute("""
-                            CREATE TABLE "album" (
-                            "title"	TEXT NOT NULL,
-                            "artist_name"	TEXT NOT NULL,
-                            "year"	INTEGER,
-                            "genre"	TEXT,
-                            "format"    TEXT,
-                            "cover"	BLOB)
-                            """)
-
-                # Create table books
-                c.execute("""
-                            CREATE TABLE "books" (
-                            "title"	TEXT NOT NULL,
-                            "author"	TEXT,
-                            "year"	INTEGER,
-                            "publisher"	TEXT)
-                            """)
-
-                # Create table films
-                c.execute("""
-                            CREATE TABLE "films" (
-                            "title"	TEXT NOT NULL,
-                            "year"	INTEGER,
-                            "film_info"	TEXT,
-                            "cover"	BLOB)
-                            """)
-
-                # Commit changes
-                conn.commit()
-
-                # Close connection
-                conn.close()
-
-                messagebox.showinfo("Info", f"Your database {create_db_entry.get()}.db has been created successfully!")
-
+                # request to database for creation
+                create_command(conn)
+                # success message
+                messagebox.showinfo("Info", f"Your database {db_name}.db has been created successfully!")
+                # close prompt window for creation
                 create_db_win.destroy()
 
-                myshelf_main.open_my_shelf(new_db)
+                # open new window showing database
+                my_shelf = OpenShelf(new_db)
+                my_shelf.set_window()
+                my_shelf.open_my_shelf()
         else:
+            # warning message if the db name does already exist
             messagebox.showwarning("Warning", "This database name already exists!")
 
     # Create new windows to set new database name
@@ -128,4 +102,5 @@ exit_btn = Button(root, text="Exit", padx=40, pady=30, command=root.quit, fg="wh
 exit_btn.pack(pady=(70, 0))
 
 
-root.mainloop()
+if __name__ == "__main__":
+    root.mainloop()
