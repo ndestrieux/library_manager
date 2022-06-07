@@ -1,8 +1,10 @@
 import sqlite3
-from tkinter import messagebox
 
 
-def create_command(conn):
+def create_command(new_db):
+    # Connect to database
+    conn = sqlite3.connect(new_db)
+
     # Create cursor
     c = conn.cursor()
 
@@ -40,3 +42,20 @@ def create_command(conn):
 
     # Close connection
     conn.close()
+
+
+def fetch_data_from_database(db, table_name):
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    if table_name == "books":
+        order_by = "author"
+    elif table_name == "album":
+        order_by = "artist_name"
+    elif table_name == "films":
+        order_by = "title"
+    c.execute(f"SELECT * FROM {table_name} ORDER BY {order_by}")
+    rows = c.fetchall()
+    c.close()
+    return rows
+
+

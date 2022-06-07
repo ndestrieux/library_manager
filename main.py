@@ -3,7 +3,7 @@ from tkinter import filedialog, messagebox
 from PIL import ImageTk, Image
 import os
 import sqlite3
-from myshelf_main import OpenShelf
+from myshelf import OpenShelf
 from sqlite_requests import create_command
 
 
@@ -31,11 +31,11 @@ def open_db():
                                     title="Select a file:",
                                     filetypes=(("database files", "*.db"),)
                                     )
-
-    # open new window showing database
-    my_shelf = OpenShelf(root.filename)
-    my_shelf.set_window()
-    my_shelf.open_my_shelf()
+    # open new window showing database if file is selected
+    if not root.filename == ():
+        my_shelf = OpenShelf(root.filename)
+        my_shelf.set_window()
+        my_shelf.open_my_shelf()
 
 
 # create new database
@@ -54,12 +54,13 @@ def create_db():
             # checking if the new database is created and opens properly
             try:
                 # Create a database
-                conn = sqlite3.connect(f'db/{db_name}.db')
+                conn = sqlite3.connect(new_db)
+                conn.close()
             except sqlite3.OperationalError:
                 messagebox.showerror("Error", "Error while creating database, please avoid special characters")
             else:
                 # request to database for creation
-                create_command(conn)
+                create_command(new_db)
                 # success message
                 messagebox.showinfo("Info", f"Your database {db_name}.db has been created successfully!")
                 # close prompt window for creation
