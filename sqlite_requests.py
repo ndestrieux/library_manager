@@ -59,3 +59,38 @@ def fetch_data_from_database(db, table_name):
     return rows
 
 
+def save_item(db, table, entry_list):
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+
+    # Set tables database columns
+    if table == "books":
+        columns = "(title, author, year, publisher)"
+    elif table == "album":
+        columns = "(title, artist_name, year, genre, format, cover)"
+    elif table == "films":
+        columns = "(title, year, film_info, cover)"
+
+    entry_values = "("
+    # Get value from entries
+    for e in entry_list:
+        if e != entry_list[-1]:
+            entry_values = f"{entry_values}\'{e.get()}\', "
+        else:
+            entry_values = f"{entry_values}\'{e.get()}\')"
+
+    c.execute(f"""
+                INSERT INTO {table} {columns}
+                VALUES {entry_values}
+                """)
+    # print(columns, entry_values)
+
+    # Commit changes
+    conn.commit()
+
+    # Close connection
+    conn.close()
+
+
+
+
