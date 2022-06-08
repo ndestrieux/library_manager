@@ -42,12 +42,10 @@ class OpenShelf:
         canvas.place(x=0, y=0, relwidth=1, relheight=1)
 
         # Set grid for buttons
-        self.container.columnconfigure(0, weight=1)
+        self.container.columnconfigure((0, 1), weight=1)
         self.container.columnconfigure(1, weight=1)
-        self.container.rowconfigure(0, weight=1)
-        self.container.rowconfigure(1, weight=1)
-        self.container.rowconfigure(2, weight=1)
-        self.container.rowconfigure(3, weight=2)
+        self.container.rowconfigure((0, 1, 2, 3), weight=1)
+
         # Main page buttons
         view_books_btn = Button(self.container, text="Show books", padx=28, pady=20,
                                 command=lambda: self.view_items("books"), fg="white", bg="black")
@@ -69,7 +67,7 @@ class OpenShelf:
         add_films_btn.grid(row=2, column=1)
         previous_window_btn = Button(self.container, text="Back", padx=28, pady=20,
                                      command=self.shelf.destroy, fg="white", bg="black")
-        previous_window_btn.grid(row=3, columnspan=2)
+        previous_window_btn.grid(row=3, rowspan=2, columnspan=2)
 
     # Display entries from database
     def view_items(self, table):
@@ -82,7 +80,9 @@ class OpenShelf:
         rows = fd(self.db, table)
         # Set table for displaying books
         if table == "books":
-            tree = ttk.Treeview(self.container, column=("title", "author", "year", "publisher"), show='headings')
+            view_title = "My books"
+            tree = ttk.Treeview(self.container,
+                                column=("title", "author", "year", "publisher"), show='headings')
             tree.column("#1", anchor=CENTER)
             tree.heading("#1", text="Title")
             tree.column("#2", anchor=CENTER)
@@ -91,11 +91,13 @@ class OpenShelf:
             tree.heading("#3", text="Year")
             tree.column("#4", anchor=CENTER)
             tree.heading("#4", text="Publisher")
-            tree.pack(side="top", expand=TRUE, fill=BOTH)
+            item_name = "book"
+
         # Set table for displaying album
         elif table == "album":
+            view_title = "My music"
             tree = ttk.Treeview(self.container,
-                                column=("title", "artist_name", "year", "genre", "format", "cover"), show='headings')
+                                column=("title", "artist_name", "year", "genre", "format"), show='headings')
             tree.column("#1", anchor=CENTER)
             tree.heading("#1", text="Title")
             tree.column("#2", anchor=CENTER)
@@ -106,29 +108,40 @@ class OpenShelf:
             tree.heading("#4", text="Genre")
             tree.column("#5", anchor=CENTER)
             tree.heading("#5", text="Format")
-            tree.column("#6", anchor=CENTER)
-            tree.heading("#6", text="Cover")
-            tree.pack(side="top", expand=TRUE, fill=BOTH)
+            item_name = "album"
+
         # Set table for displaying films
         elif table == "films":
-            tree = ttk.Treeview(self.container, column=("title", "year", "info", "cover"), show='headings')
+            view_title = "My films"
+            tree = ttk.Treeview(self.container,
+                                column=("title", "year", "info"), show='headings')
             tree.column("#1", anchor=CENTER)
             tree.heading("#1", text="Title")
             tree.column("#2", anchor=CENTER)
             tree.heading("#2", text="Year")
             tree.column("#3", anchor=CENTER)
             tree.heading("#3", text="Info")
-            tree.column("#4", anchor=CENTER)
-            tree.heading("#4", text="Cover")
-            tree.pack(side=TOP, expand=TRUE, fill=BOTH)
+            item_name = "DVD"
 
+        # Insert view title
+        view_title_label = Label(self.container, text=view_title, font=("Arial", 25))
+        view_title_label.pack()
+        # Insert column headers
+        tree.pack(side="top", expand=TRUE, fill=BOTH)
         # Insert rows in window from selected table
         for row in rows:
             tree.insert("", END, values=row)
+
+        # display the number of items in the library as per the category selected
+        plural = "s"
+        row_count = len(rows)
+        row_count_label = Label(self.container,
+                                text=f"You have {row_count} {item_name}{plural if row_count > 1 else ''}")
+        row_count_label.pack(anchor=E, padx=8)
         # Return to previous window
         previous_window_btn = Button(self.container, text="Back", padx=20, pady=15,
                                      command=self.open_my_shelf, fg="white", bg="black")
-        previous_window_btn.pack(side=BOTTOM, anchor="e", padx=8, pady=8)
+        previous_window_btn.pack(side=BOTTOM, anchor=W, padx=8, pady=4)
 
     def add_item(self, table):
         # Remove widgets previously set in this window
@@ -137,6 +150,11 @@ class OpenShelf:
         # Set new window size
         self.shelf.geometry("600x800")
         # setting background image
+
+        # Set grid for the view
+        self.container.columnconfigure((0, 1), weight=1)
+        self.container.rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
+
         global bg_img
         bg_img = Image.open('images/pexels-emre-can-acer-2079451.jpg')
         [img_width, img_height] = bg_img.size
@@ -146,25 +164,34 @@ class OpenShelf:
         canvas = Canvas(self.container)
         canvas.create_image(-50, -200, image=bg_img, anchor=NW)
         canvas.place(x=0, y=0, relwidth=1, relheight=1)
-        # Set
+
+        # Set view title and label names as per the table selected
         if table == "books":
             label_list = ["Add book", "Title", "Author", "Year", "Publisher"]
         if table == "album":
-            label_list = ["Add album", "Title", "Artist", "Year", "Genre", "Format", "Cover"]
+            label_list = ["Add album", "Title", "Artist", "Year", "Genre", "Format"]
         if table == "films":
-            label_list = ["Add film", "Title", "Year", "Info", "Cover"]
-        page_title = Label(self.container, text=label_list[0], font=("Arial", 25))
-        page_title.pack()
+            label_list = ["Add film", "Title", "Year", "Info"]
+
+        # Insert view title on window
+        page_title = Label(self.container, text=label_list[0], font=("Arial", 28), bg="#DCB56E")
+        page_title.grid(row=0, columnspan=2, sticky=W+N+E+S)
+        # Unpack and display labels and entries
         entry_list = []
-        for l in label_list[1:]:
-            label = Label(self.container, text=l)
-            label.pack()
-            entry = Entry(self.container)
-            entry.pack()
+        row_nb = 1
+        for label in label_list[1:]:
+            label = Label(self.container, text=label, font=("Arial", 18), bg="#DCB56E")
+            label.grid(row=row_nb, column=0, sticky=E, padx=10),
+            entry = Text(self.container, height=3, width=40)
+            entry.grid(row=row_nb, column=1)
             entry_list.append(entry)
+            row_nb += 1
+
+        # Go back to previous menu
+        back_btn = Button(self.container, text="Back", padx=20, pady=15,
+                          command=self.open_my_shelf, fg="white", bg="black")
+        back_btn.grid(row=5, column=0, sticky=W, padx=8, pady=8)
+        # Save new item
         save_btn = Button(self.container, text="Save", padx=20, pady=15,
                           command=lambda: save_item(self.db, table, entry_list), fg="white", bg="black")
-        save_btn.pack(side=BOTTOM, padx=8, pady=8)
-        previous_window_btn = Button(self.container, text="Back", padx=20, pady=15,
-                                     command=self.open_my_shelf, fg="white", bg="black")
-        previous_window_btn.pack(side=BOTTOM, anchor="e", padx=8, pady=8)
+        save_btn.grid(row=5, column=1, sticky=E, padx=8, pady=8)

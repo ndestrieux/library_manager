@@ -1,4 +1,5 @@
 import sqlite3
+from tkinter import *
 
 
 def create_command(new_db):
@@ -15,8 +16,7 @@ def create_command(new_db):
                 "artist_name"	TEXT NOT NULL,
                 "year"	INTEGER,
                 "genre"	TEXT,
-                "format"    TEXT,
-                "cover"	BLOB)
+                "format"    TEXT)
                 """)
 
     # Create table books
@@ -33,8 +33,7 @@ def create_command(new_db):
                 CREATE TABLE "films" (
                 "title"	TEXT NOT NULL,
                 "year"	INTEGER,
-                "film_info"	TEXT,
-                "cover"	BLOB)
+                "film_info"	TEXT)
                 """)
 
     # Commit changes
@@ -60,37 +59,30 @@ def fetch_data_from_database(db, table_name):
 
 
 def save_item(db, table, entry_list):
-    conn = sqlite3.connect(db)
-    c = conn.cursor()
-
     # Set tables database columns
     if table == "books":
         columns = "(title, author, year, publisher)"
     elif table == "album":
-        columns = "(title, artist_name, year, genre, format, cover)"
+        columns = "(title, artist_name, year, genre, format)"
     elif table == "films":
-        columns = "(title, year, film_info, cover)"
+        columns = "(title, year, film_info)"
 
     entry_values = "("
     # Get value from entries
-    for e in entry_list:
-        if e != entry_list[-1]:
-            entry_values = f"{entry_values}\'{e.get()}\', "
-        else:
-            entry_values = f"{entry_values}\'{e.get()}\')"
+    for e in entry_list[0:-1]:
+        entry_values = f"{entry_values}\'{e.get('1.0',END)}\', "
+    entry_values = f"{entry_values}\'{entry_list[-1].get('1.0',END)}\')"
+
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
 
     c.execute(f"""
                 INSERT INTO {table} {columns}
                 VALUES {entry_values}
                 """)
-    # print(columns, entry_values)
 
     # Commit changes
     conn.commit()
 
     # Close connection
     conn.close()
-
-
-
-
