@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from PIL import ImageTk, Image
 from sqlite_requests import fetch_data_from_database as fd, save_item
+from constants import YEAR_OPTIONS
 
 
 class OpenShelf:
@@ -149,12 +150,12 @@ class OpenShelf:
             widget.destroy()
         # Set new window size
         self.shelf.geometry("600x800")
-        # setting background image
 
         # Set grid for the view
         self.container.columnconfigure((0, 1), weight=1)
         self.container.rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
+        # setting background image
         global bg_img
         bg_img = Image.open('images/pexels-emre-can-acer-2079451.jpg')
         [img_width, img_height] = bg_img.size
@@ -179,11 +180,21 @@ class OpenShelf:
         # Unpack and display labels and entries
         entry_list = []
         row_nb = 1
-        for label in label_list[1:]:
-            label = Label(self.container, text=label, font=("Arial", 18), bg="#DCB56E")
+        for label_name in label_list[1:]:
+            label = Label(self.container, text=label_name, font=("Arial", 18), bg="#DCB56E")
             label.grid(row=row_nb, column=0, sticky=E, padx=10),
-            entry = Text(self.container, height=3, width=40)
-            entry.grid(row=row_nb, column=1)
+            if label_name == "Year":
+                entry = IntVar(self.container)
+                entry.set((YEAR_OPTIONS[0]))
+                menu = ttk.Combobox(self.container, textvariable=entry, values=YEAR_OPTIONS)
+                menu.configure(width=40)
+                menu.grid(row=row_nb, column=1)
+            elif label_name == "Info":
+                entry = Text(self.container, height=3, width=40)
+                entry.grid(row=row_nb, column=1)
+            else:
+                entry = Entry(self.container, width=40)
+                entry.grid(row=row_nb, column=1)
             entry_list.append(entry)
             row_nb += 1
 

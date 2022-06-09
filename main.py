@@ -47,11 +47,11 @@ def create_db():
         dir_status = os.path.exists(db_path)
         if dir_status is False:
             os.makedirs(db_path)
-        # check if new database name already exists before creating it
+        # Check if new database name already exists before creating it
         db_name = create_db_entry.get()
         new_db = f'db/{db_name}.db'
         if not os.path.exists(new_db):
-            # checking if the new database is created and opens properly
+            # Checking if the new database is created and opens properly
             try:
                 # Create a database
                 conn = sqlite3.connect(new_db)
