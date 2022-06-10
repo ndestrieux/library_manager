@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from PIL import ImageTk, Image
-from sqlite_requests import fetch_data_from_database as fd, save_item
+from sqlite_requests import fetch_data_from_database as fd, save_item, delete_entry
 from constants import YEAR_OPTIONS
 
 
@@ -22,7 +22,7 @@ class OpenShelf:
                          bd=1,
                          relief=SUNKEN,
                          anchor=E)
-        self.container.pack(side="top", expand=TRUE, fill=BOTH)
+        self.container.pack(side=TOP, expand=TRUE, fill=BOTH)
         info_bar.grid(row=2, column=0, columnspan=3, sticky=W + E)
         self.info_frame.pack(side=BOTTOM, anchor="e", padx=8, pady=8)
 
@@ -79,6 +79,7 @@ class OpenShelf:
         self.shelf.geometry("1200x1000")
         # get data from the selected table
         rows = fd(self.db, table)
+        print(rows[0:-1])
         # Set table for displaying books
         if table == "books":
             view_title = "My books"
@@ -115,7 +116,7 @@ class OpenShelf:
         elif table == "films":
             view_title = "My films"
             tree = ttk.Treeview(self.container,
-                                column=("title", "year", "info"), show='headings')
+                                column=("title", "year", "info", "delete"), show='headings')
             tree.column("#1", anchor=CENTER)
             tree.heading("#1", text="Title")
             tree.column("#2", anchor=CENTER)
@@ -131,7 +132,7 @@ class OpenShelf:
         tree.pack(side="top", expand=TRUE, fill=BOTH)
         # Insert rows in window from selected table
         for row in rows:
-            tree.insert("", END, values=row)
+            tree.insert("", END, iid=row[-1], values=row[:-1])
 
         # display the number of items in the library as per the category selected
         plural = "s"
@@ -139,10 +140,19 @@ class OpenShelf:
         row_count_label = Label(self.container,
                                 text=f"You have {row_count} {item_name}{plural if row_count > 1 else ''}")
         row_count_label.pack(anchor=E, padx=8)
+
+        # Frame for buttons
+        button_frame = Frame(self.container)
+        button_frame.pack(fill=X, padx=10)
+        button_frame.columnconfigure((0, 1), weight=1)
         # Return to previous window
-        previous_window_btn = Button(self.container, text="Back", padx=20, pady=15,
+        previous_window_btn = Button(button_frame, text="Back", padx=20, pady=15,
                                      command=self.open_my_shelf, fg="white", bg="black")
-        previous_window_btn.pack(side=BOTTOM, anchor=W, padx=8, pady=4)
+        previous_window_btn.grid(row=0, column=0, sticky=W)
+        # Delete button
+        delete_entry_btn = Button(button_frame, text="Delete selected", padx=20, pady=15,
+                                  command=lambda: delete_entry(table, tree), fg="white", bg="black")
+        delete_entry_btn.grid(row=0, column=1, sticky=E)
 
     def add_item(self, table):
         # Remove widgets previously set in this window
@@ -185,7 +195,7 @@ class OpenShelf:
             label.grid(row=row_nb, column=0, sticky=E, padx=10),
             if label_name == "Year":
                 entry = IntVar(self.container)
-                entry.set((YEAR_OPTIONS[0]))
+                entry.set(0000)
                 menu = ttk.Combobox(self.container, textvariable=entry, values=YEAR_OPTIONS)
                 menu.configure(width=40)
                 menu.grid(row=row_nb, column=1)

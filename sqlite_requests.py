@@ -63,7 +63,7 @@ def fetch_data_from_database(db, table_name):
             order_by = "artist_name"
         elif table_name == "films":
             order_by = "title"
-        c.execute(f"SELECT * FROM {table_name} ORDER BY {order_by}")
+        c.execute(f"SELECT *, rowid FROM {table_name} ORDER BY {order_by}")
         rows = c.fetchall()
         c.close()
         return rows
@@ -98,9 +98,9 @@ def save_item(db, table, entry_list):
         # Close connection
         conn.close()
 
-    except sqlite3.OperationalError as OE:
+    except sqlite3.OperationalError:
         messagebox.showerror("Error", "Database is not reachable please try again later.")
-    except sqlite3.IntegrityError as IE:
+    except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Check your values, field 'Year' must be a number")
 
     else:
@@ -111,6 +111,13 @@ def save_item(db, table, entry_list):
             if type(e) is type(Entry()):
                 e.delete(0, END)
             elif type(e) is type(IntVar()):
-                e.set((YEAR_OPTIONS[0]))
+                e.set(0000)
             elif type(e) is type(Text()):
                 e.delete('1.0', END)
+
+
+def delete_entry(table, tree):
+    selected = tree.selection()
+    if selected:
+        print(table, selected)
+        tree.delete(selected)
