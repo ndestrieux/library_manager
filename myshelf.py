@@ -79,7 +79,6 @@ class OpenShelf:
         self.shelf.geometry("1200x1000")
         # get data from the selected table
         rows = fd(self.db, table)
-        print(rows[0:-1])
         # Set table for displaying books
         if table == "books":
             view_title = "My books"
@@ -151,7 +150,8 @@ class OpenShelf:
         previous_window_btn.grid(row=0, column=0, sticky=W)
         # Delete button
         delete_entry_btn = Button(button_frame, text="Delete selected", padx=20, pady=15,
-                                  command=lambda: delete_entry(table, tree), fg="white", bg="black")
+                                  command=lambda: delete_entry(self.db, table, tree, row_count_label),
+                                  fg="white", bg="black")
         delete_entry_btn.grid(row=0, column=1, sticky=E)
 
     def add_item(self, table):

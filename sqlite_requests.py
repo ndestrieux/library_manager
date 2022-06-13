@@ -1,7 +1,7 @@
 import sqlite3
 from tkinter import *
 from tkinter import messagebox
-from constants import YEAR_OPTIONS
+import re
 
 
 def create_command(new_db):
@@ -105,7 +105,7 @@ def save_item(db, table, entry_list):
 
     else:
         # success message
-        messagebox.showinfo("Info", f"New item added to database")
+        messagebox.showinfo("Info", "New item added to database")
         # reset form
         for e in entry_list:
             if type(e) is type(Entry()):
@@ -116,8 +116,42 @@ def save_item(db, table, entry_list):
                 e.delete('1.0', END)
 
 
-def delete_entry(table, tree):
+def delete_entry(db, table, tree, row_count_label):
     selected = tree.selection()
+    # If item(s) selected do the following
     if selected:
-        print(table, selected)
-        tree.delete(selected)
+        item_list_to_delete = ""
+        for s in selected:
+            item_list_to_delete = f"{item_list_to_delete}{tree.item(s)['values'][0]}\n"
+        confirmation = messagebox.askokcancel("Confirmation",
+                                              f"Are your sure you want to delete the following items:\n"
+                                              f"{item_list_to_delete}")
+        # Get confirmation is data must be deleted
+        if confirmation:
+            # Check if database is reachable otherwise throw a message box with error
+            try:
+                conn = sqlite3.connect(f"file:{db}?mode=rw", uri=True)
+                c = conn.cursor()
+            except sqlite3.OperationalError:
+                messagebox.showerror("Error", "Database is not reachable please try again later.")
+            else:
+                # Delete row(s) selected from database and on the list displayed
+                for s in selected:
+                    c.execute(f"DELETE FROM {table} WHERE rowid = {s}")
+                    tree.delete(s)
+
+                # Commit changes
+                conn.commit()
+
+                # Close connection
+                conn.close()
+
+                # Update row count
+                old_row_count = int(re.search("\d+", row_count_label["text"]).group(0))
+                new_row_count = old_row_count - len(selected)
+                row_count_label["text"] = re.sub("\d+", str(new_row_count),
+                                                 row_count_label["text"]
+                                                 if new_row_count > 1 else row_count_label["text"][:-1])
+
+                # Confirmation that the data was deleted
+                messagebox.showinfo("Info", f"The following items have been deleted:\n{item_list_to_delete}")
